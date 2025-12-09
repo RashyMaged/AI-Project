@@ -7,15 +7,14 @@ def create_board(rows=6, cols=7):
 
 # 2. Print board
 def print_board(board):
-    print(np.flip(board, 0))  # نقلب الصفوف عشان الصف 0 يكون في الأسفل
-
+    print(np.flip(board, 0))  
 # 3. Drop piece
 def drop_piece(board, row, col, piece):
     board[row][col] = piece
 
 # 4. Is valid location
 def is_valid_location(board, col):
-    return board[-1][col] == 0  # الصف الأخير هو الأعلى في الطباعة
+    return board[-1][col] == 0  
 
 # 5. Next open row
 def get_next_open_row(board, col):
@@ -49,12 +48,12 @@ def check_vertical(board, piece):
 # 9. Check diagonal
 def check_diagonal(board, piece):
     rows, cols = board.shape
-    # من الأسفل لليمين للأعلى
     for r in range(rows - 3):
+
         for c in range(cols - 3):
             if all(board[r+i, c+i] == piece for i in range(4)):
                 return True
-    # من الأسفل لليسار للأعلى
+
     for r in range(rows - 3):
         for c in range(3, cols):
             if all(board[r+i, c-i] == piece for i in range(4)):
@@ -67,9 +66,8 @@ def winning_move(board, piece):
 
 # 11. Check draw
 def is_draw(board):
-    return all(board[-1, c] != 0 for c in range(board.shape[1]))  # كل الأعمدة ممتلئة في الصف الأعلى
+    return all(board[-1, c] != 0 for c in range(board.shape[1]))  
 
-# --- مثال على استخدام الدوال ---
 if __name__ == "__main__":
     board = create_board()
     game_over = False
