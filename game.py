@@ -1,63 +1,99 @@
-import tkinter as tk
-from tkinter import messagebox
+import sys
 
-root = tk.Tk()
-root.title("Connect Four")
+import pygame
+from pygame.locals import KEYDOWN
 
-
-ROWS, COLS = 6, 7
-SQUARE_SIZE = 80
-canvas_width = COLS * SQUARE_SIZE
-canvas_height = (ROWS + 1) * SQUARE_SIZE
-canvas = tk.Canvas(root, width=canvas_width, height=canvas_height, bg="black")
-canvas.pack()
-
- 
-title_text = canvas.create_text(canvas_width//2, 50, text="CONNECT FOUR!!",
-                                fill="white", font=("monospace", 30))
-subtitle_text = canvas.create_text(canvas_width//2, 120, text="HAVE FUN!",
-                                   fill="#17C4F3", font=("monospace", 25))
+from config import black, blue, white
+from connect_game import ConnectGame
+from events import MouseClickEvent, MouseHoverEvent, bus
+from game_data import GameData
+from game_renderer import GameRenderer
 
 
-def show_message(message, color="white"):
-    canvas.delete("message")
-    canvas.create_text(canvas_width//2, 160, text=message, fill=color,
-                       font=("monospace", 20), tags="message")
+def quit():
+    sys.exit()
 
 
-def start_game():
-    show_message("Game Started!", "yellow")
-    # canvas.delete("piece")  
+def start():
+    data = GameData()
+    screen = pygame.display.set_mode(data.size)
+    game = ConnectGame(data, GameRenderer(screen, data))
+
+    game.print_board()
+    game.draw()
+
+    pygame.display.update()
+    pygame.time.wait(1000)
+
+    # Processes mouse and keyboard events, dispatching events to the event bus.
+    # The events are handled by the ConnectGame and GameRenderer classes.
+    while not game.game_data.game_over:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                game.quit()
+
+            if event.type == pygame.MOUSEMOTION:
+                bus.emit("mouse:hover", game.renderer, MouseHoverEvent(event.pos[0]))
+
+            pygame.display.update()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                bus.emit("mouse:click", game, MouseClickEvent(event.pos[0]))
+
+            if event.type == KEYDOWN:
+                if event.key == pygame.K_z:
+                    mods: int = pygame.key.get_mods()
+                    if mods & pygame.KMOD_CTRL:
+                        bus.emit("game:undo", game)
+
+            game.update()
+            game.draw()
 
 
-def quit_game():
-    root.destroy()
-
-start_btn = tk.Button(root, text="Start", command=start_game, width=10, height=2)
-start_btn.pack(side="left", padx=50, pady=20)
-
-quit_btn = tk.Button(root, text="Quit", command=quit_game, width=10, height=2)
-quit_btn.pack(side="right", padx=50, pady=20)
-
- 
-def draw_board():
-    for c in range(COLS):
-        for r in range(ROWS):
-            x1 = c * SQUARE_SIZE
-            y1 = (r+1) * SQUARE_SIZE
-            x2 = x1 + SQUARE_SIZE
-            y2 = y1 + SQUARE_SIZE
-            canvas.create_rectangle(x1, y1, x2, y2, fill="blue")
-            canvas.create_oval(x1+5, y1+5, x2-5, y2-5, fill="black", tags="piece")
-
-draw_board()
+def text_objects(text, font, color):
+    textSurface = font.render(text, True, color)
+    return textSurface, textSurface.get_rect()
 
 
-def click_event(event):
-    col = event.x // SQUARE_SIZE
-    show_message(f"You clicked column {col+1}", "white")
+def message_display(text, color, p, q, v):
+    largeText = pygame.font.SysFont("monospace", v)
+    TextSurf, TextRect = text_objects(text, largeText, color)
+    TextRect.center = (p, q)
+    screen.blit(TextSurf, TextRect)
 
-canvas.bind("<Button-1>", click_event)
 
- 
-root.mainloop()
+pygame.init()
+screen = pygame.display.set_mode(GameData().size)
+pygame.display.set_caption("Connect Four | PowerPuff girls")
+message_display("CONNECT FOUR!!", white, 350, 150, 75)
+message_display("HAVE FUN!", (23, 196, 243), 350, 300, 75)
+
+running = True
+while running:
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    def button(msg, x, y, w, h, ic, ac, action=None):
+        mouse = pygame.mouse.get_pos()
+        click = pygame.mouse.get_pressed()
+
+        if x + w > mouse[0] > x and y + h > mouse[1] > y:
+            pygame.draw.rect(screen, ac, (x, y, w, h))
+
+            if click[0] == 1 and action != None:
+                action()
+        else:
+            pygame.draw.rect(screen, ic, (x, y, w, h))
+
+        smallText = pygame.font.SysFont("monospace", 30)
+        textSurf, textRect = text_objects(msg, smallText, white)
+        textRect.center = ((x + (w / 2)), (y + (h / 2)))
+        screen.blit(textSurf, textRect)
+
+    button("PLAY!", 150, 450, 100, 50, white, white, start)
+    button("PLAY", 152, 452, 96, 46, black, black, start)
+    button("QUIT", 450, 450, 100, 50, white, white, quit)
+    button("QUIT", 452, 452, 96, 46, black, black, quit)
+    pygame.display.update()

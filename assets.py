@@ -16,5 +16,5 @@ red_coin = load(join("Images", "redball90px.png"))
 # Load the yellow coin image from the images folder.
 yellow_coin = load(join("Images", "yellowball90px.png"))
 
-# Load the black coin image from the images folder.
-black_coin = load(join("Images", "blackball91px.png"))
+# Load the BLACK coin image from the images folder.
+black_coin = load(join("Images", "BLACKball91px.png"))

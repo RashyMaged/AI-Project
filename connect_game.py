@@ -1,4 +1,4 @@
-import math 
+import math
 import os
 import sys
 
@@ -17,7 +17,6 @@ class ConnectGame:
 
     game_data: GameData
     renderer: GameRenderer
-    "بيشاورو على الكلاسات اللى عملنالها import "
 
     def __init__(self, game_data: GameData, renderer: GameRenderer):
         """
@@ -47,42 +46,32 @@ class ConnectGame:
         )
 
         col: int = int(math.floor(event.posx / self.game_data.sq_size))
-        "يحسب رقم العمود اللي تم النقر عليه، عن طريق تقسيم إحداثي X للنقر على حجم المربع (square size). "
-
 
         if self.game_data.game_board.is_valid_location(col):
             row: int = self.game_data.game_board.get_next_open_row(col)
-            "بيحدد هيحط القطعه فى انهى صف فى العمود"
+
             self.game_data.last_move_row.append(row)
             self.game_data.last_move_col.append(col)
-            "بيسجل اخر حركة حصلت (للصف والعمود )"
-
             self.game_data.game_board.drop_piece(row, col, self.game_data.turn + 1)
-            "بينزل الكوين فى المكان المناسب ، turn +1 يعنى الدور الحالى" 
-            
-            
-            
+
             self.draw()
 
             bus.emit(
                 "piece:drop", PieceDropEvent(self.game_data.game_board.board[row][col])
             )
-            "بيعمل ال piece drop"
+
             self.print_board()
-            "بيطبع حالة اللوحة "
+
             if self.game_data.game_board.winning_move(self.game_data.turn + 1):
                 bus.emit(
                     "game:over", self.renderer, GameOver(False, self.game_data.turn + 1)
                 )
                 self.game_data.game_over = True
-            "بيتأكد لو الحركة دى ادت الى الفوز"
 
             pygame.display.update()
-            "بيحدث الشاشه"
 
             self.game_data.turn += 1
             self.game_data.turn = self.game_data.turn % 2
-            "يغير الدور الى اللاعب التانى"
 
     @bus.on("game:undo")
     def undo(self):
@@ -97,11 +86,9 @@ class ConnectGame:
                 self.game_data.last_move_col.pop(),
                 0,
             )
-            "بيشيل الحركة السابقه من اللوحة"
 
         self.game_data.turn += 1
         self.game_data.turn = self.game_data.turn % 2
-        "ويخلى اللاعب يلعب تانى"
 
     def update(self):
         """
@@ -111,13 +98,11 @@ class ConnectGame:
             bus.emit("game:over", self.renderer, GameOver(was_tie=True))
 
             self.game_data.game_over = True
-            "بيتحقق لو اللعبة انتهت بالتعادل يعنى كل الاماكن مليانه ، ويطلع game over ويغير حالة اللعبه"
 
         if self.game_data.game_over:
             print(os.getpid())
             pygame.time.wait(1000)
             os.system("game.py")
-            "سواء اللعبة انتهت بالتعادل او الفوز ينتظر ثوانى  ويشغل الملف من اول وجديد"
 
     def draw(self):
         """
@@ -130,6 +115,3 @@ class ConnectGame:
         Prints the state of the board to the console.
         """
         self.game_data.game_board.print_board()
-        
-    
-        

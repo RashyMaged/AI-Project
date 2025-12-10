@@ -45,7 +45,7 @@ class PieceDropEvent:
     """Event fired when a game piece is dropped into an open slot.
 
     Args:
-        side (str): The side that dropped the piece ('red' or 'black').
+        side (str): The side that dropped the piece ('red' or 'BLACK').
     """
     def __init__(self, side: str):
         self.side = side
