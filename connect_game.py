@@ -8,6 +8,7 @@ from config import black
 from events import GameOver, MouseClickEvent, PieceDropEvent, bus
 from game_data import GameData
 from game_renderer import GameRenderer
+from minimax_ai import find_best_move, AI_PIECE
 
 
 class ConnectGame:
@@ -39,6 +40,8 @@ class ConnectGame:
         Handles a mouse click event.
         :param event: Data about the mouse click
         """
+        if self.game_data.turn != 0:
+            return
         pygame.draw.rect(
             self.renderer.screen,
             black,
@@ -94,6 +97,39 @@ class ConnectGame:
         """
         Checks the game state, dispatching events as needed.
         """
+        if self.game_data.turn == 1 and not self.game_data.game_over:
+            # يمكن تعديل العمق (4 هنا) للتحكم في صعوبة اللعبة
+            # عمق أكبر = أصعب وأبطأ
+            col = find_best_move(self.game_data, depth=4) 
+            
+            if self.game_data.game_board.is_valid_location(col):
+                row: int = self.game_data.game_board.get_next_open_row(col)
+
+                self.game_data.last_move_row.append(row)
+                self.game_data.last_move_col.append(col)
+                # استخدام AI_PIECE بدلاً من self.game_data.turn + 1 لضمان القيمة 2
+                self.game_data.game_board.drop_piece(row, col, AI_PIECE) 
+
+                self.draw()
+
+                bus.emit(
+                    "piece:drop", PieceDropEvent(self.game_data.game_board.board[row][col])
+                )
+
+                self.print_board()
+
+                if self.game_data.game_board.winning_move(AI_PIECE):
+                    bus.emit(
+                        "game:over", self.renderer, GameOver(False, AI_PIECE)
+                    )
+                    self.game_data.game_over = True
+
+                pygame.display.update()
+
+                # بعد انتهاء دور الذكاء الاصطناعي
+                self.game_data.turn += 1
+                self.game_data.turn = self.game_data.turn % 2 
+        # ----------------------------------------------------------------------------------
         if self.game_data.game_board.tie_move():
             bus.emit("game:over", self.renderer, GameOver(was_tie=True))
 
