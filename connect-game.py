@@ -130,4 +130,6 @@ class ConnectGame:
         Prints the state of the board to the console.
         """
         self.game_data.game_board.print_board()
+    
+    
         
