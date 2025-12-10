@@ -1,20 +1,19 @@
 import math
 from typing import Tuple, List, Optional
 
-from game_board import GameBoard # استيراد لوحة اللعبة
+from game_board import GameBoard 
 from game_data import GameData
-from config import red, yellow # استيراد الألوان للقطع
+from config import red, yellow 
+ 
 
-# تعريف القطع بناءً على استخدامها في game_board.py
-# اللاعب البشري (الأحمر) = 1، الذكاء الاصطناعي (الأصفر) = 2
 PLAYER_PIECE = 1
 AI_PIECE = 2
 
-# --- وظائف مساعدة للـ AI ---
+
 
 def get_valid_locations(board: GameBoard) -> List[int]:
     """
-    تُرجع قائمة بالأعمدة الصالحة لإسقاط قطعة فيها.
+   ترجع الاعمده اللى ينفع اجط فيها coin
     """
     valid_locations: List[int] = []
     for col in range(board.cols):
@@ -24,17 +23,15 @@ def get_valid_locations(board: GameBoard) -> List[int]:
 
 def drop_piece_on_copy(board: GameBoard, row: int, col: int, piece: int) -> GameBoard:
     """
-    تُسقط قطعة في نسخة من اللوحة وتُرجع اللوحة الجديدة.
+   يحط القطعه ويعمل copy بعدين يرجع شكل ال board الجديده
     """
-    # استخدام .copy() لضمان عدم تغيير اللوحة الأصلية أثناء محاكاة اللعبة
+    # استخدام .copy() لضمان عدم تغيير اللوحة الأصلية أثناء اللعبة
     temp_board = GameBoard(board.rows, board.cols)
     temp_board.board = board.board.copy()
     temp_board.drop_piece(row, col, piece)
     return temp_board
 
 # --- وظيفة تقييم اللوحة (Scoring) ---
-# تُعد هذه الوظيفة أساسية لـ Minimax، حيث تحدد "جودة" موقف معين.
-
 def evaluate_window(window: List[int], piece: int) -> int:
     """
     تقيّم نافذة (مجموعة من 4 خانات متتالية) وتُرجع درجة التقييم.
@@ -67,32 +64,32 @@ def score_position(board: GameBoard, piece: int) -> int:
     R = board.rows
     C = board.cols
 
-    # مركز اللوحة له أفضلية (يسهل تحقيق 4 متتالية)
-    center_array = list(board.board[:, C // 2])
-    center_count = center_array.count(piece)
-    score += center_count * 3
+    # ال center هو افضل مكان (يسهل تحقيق 4 متتالية)
+    center_array = list(board.board[:, C // 2]) 
+    center_count = center_array.count(piece)  #عدد ال coins اللى حطها ال ai
+    score += center_count * 3 
 
-    # تقييم الأفقية
+    #الافقى
     for r in range(R):
         row_array = list(board.board[r, :])
         for c in range(C - 3):
             window = row_array[c:c + 4]
             score += evaluate_window(window, piece)
 
-    # تقييم العمودية
+    #العمودى
     for c in range(C):
         col_array = list(board.board[:, c])
         for r in range(R - 3):
             window = col_array[r:r + 4]
             score += evaluate_window(window, piece)
 
-    # تقييم الأقطار الموجبة (\)
+    #الأقطار + 
     for r in range(R - 3):
         for c in range(C - 3):
             window = [board.board[r + i][c + i] for i in range(4)]
             score += evaluate_window(window, piece)
 
-    # تقييم الأقطار السالبة (/)
+    #  الأقطار السالبة (/)
     for r in range(R - 3):
         for c in range(C - 3, C):
             window = [board.board[r + i][c - i] for i in range(4)]
@@ -138,7 +135,8 @@ def minimax(board: GameBoard, depth: int, alpha: float, beta: float, maximizing_
         
         for col in valid_locations:
             row = board.get_next_open_row(col)
-            # إنشاء لوحة جديدة مع حركة محاكاة
+            #   يحط القطعه ويعمل copy بعدين يرجع شكل ال board الجديده
+
             new_board = drop_piece_on_copy(board, row, col, AI_PIECE)
             
             # استدعاء Minimax للمستوى التالي (دور اللاعب المُقلِّل)
@@ -181,8 +179,8 @@ def find_best_move(game_data: GameData, depth: int) -> int:
     """
     تجد أفضل عمود للعب الذكاء الاصطناعي باستخدام خوارزمية Minimax.
     
-    :param game_data: كائن بيانات اللعبة الحالي.
-    :param depth: عمق البحث في الخوارزمية.
+     :param game_data: بيانات اللعبة الحالية.
+    :param depth: العمق.
     :return: أفضل عمود لاختيار الحركة.
     """
     # Minimax يبدأ دائماً كـ maximizing_player
